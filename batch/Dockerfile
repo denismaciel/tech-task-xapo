@@ -1,8 +1,14 @@
 FROM jupyter/pyspark-notebook
 
-USER root
+RUN python3 -m pip install prefect
 
-RUN : && \
-    sudo apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev && \
-    :
+# Make Spark less verbose
+USER root
+RUN sed 's/log4j.rootCategory=INFO/log4j.rootCategory=ERROR/' \
+    /usr/local/spark/conf/log4j.properties.template > /usr/local/spark/conf/log4j.properties
+
+USER jovyan
+
+COPY . .
+
+CMD ["spark-submit", "pipeline.py"]
