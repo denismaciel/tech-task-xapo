@@ -5,5 +5,6 @@
 .jupyter
 .local
 .python_history
+__pycache__
 spark-warehouse
 venv
