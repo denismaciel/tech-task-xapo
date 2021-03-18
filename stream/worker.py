@@ -1,5 +1,6 @@
 """
-
+Worker responsible for querying the API endpoint at regular intervals,
+formatting and transimiting transaction information to the server.
 """
 import itertools
 import json
@@ -7,7 +8,6 @@ import logging
 import socket
 import time
 import urllib
-from typing import Any
 from typing import Dict
 from urllib.request import urlopen
 
@@ -43,6 +43,9 @@ def query_api(page):
 
 
 def is_valid(address: str) -> bool:
+    """
+    Check if `address` is a valid Bitcoin address.
+    """
     try:
         base58.b58decode_check(address)
     except ValueError:
@@ -55,7 +58,11 @@ assert is_valid('5282N4BYEwYh3j1dTgJu64Ey5qWn9Po9F') is False
 assert is_valid('not_a_Bitcoin_address') is False
 
 
-def extract_valid_addresses(tx) -> Dict[str, Any]:
+def extract_valid_addresses(tx):
+    """
+    Extract input and output addresses from the dictionary representing a
+    transaction.
+    """
     inp_addresses = itertools.chain.from_iterable(
         inp['prev_addresses'] for inp in tx['inputs']
     )
@@ -68,7 +75,11 @@ def extract_valid_addresses(tx) -> Dict[str, Any]:
     }
 
 
-def format_tx(tx: Dict) -> Dict:
+def format_tx(tx):
+    """
+    Reformat and extract relevant information from dictionary representing a
+    transaction.
+    """
     return {
         'fee': tx['fee'],
         'block_time': tx['block_time'],
@@ -79,12 +90,18 @@ def format_tx(tx: Dict) -> Dict:
 
 
 def extract_txs(response):
+    """
+    Extract and format transactions from API response.
+    """
     raw_txs = response['data']['list']
     txs = [format_tx(tx) for tx in raw_txs]
     return txs
 
 
 def has_block_been_seen(response, seen):
+    """
+    Check if block has been processed already.
+    """
     return response['data']['list'][0]['block_height'] in seen
 
 
@@ -97,6 +114,10 @@ def total_pages(response):
 
 
 def txs_belong_to_same_block(txs):
+    """
+    Check the assumption that all transactions in an API response belong to the
+    same block.
+    """
     block_heights = [tx['block_height'] for tx in txs]
     first, *_ = block_heights
     return all(block == first for block in block_heights)
@@ -121,7 +142,14 @@ assert (
 )
 
 
-def send(data: Dict) -> None:
+def add_block_to_seen(txs, seen):
+    seen.add(txs[0]['block_height'])
+
+
+def send(data):
+    """
+    Send data to the server and parse response.
+    """
     HOST = '127.0.0.1'
     PORT = 65432
 
@@ -136,16 +164,16 @@ def send(data: Dict) -> None:
         s.send(b'_end')  # Signal to server that all data has been transferred
         response = s.recv(1024)
 
-    print('Received', response)
+    return json.loads(response.decode('utf-8'))
 
 
 def main():
     """
-    Contains the logic of the worker.
+    Define logic for querying the API and processing reponse data.
     """
     WAIT_FOR_NEW_PAGE = 3
     WAIT_FOR_NEW_BLOCK = 60 * 5
-    SEEN_BLOCKS = set()
+    seen_blocks = set()
     page = 1
 
     while True:
@@ -154,19 +182,22 @@ def main():
         log.info(f'Querying page: {page} of {total}')
         assert page == current_page(response)
 
-        if current_page(response) == 1 and has_block_been_seen(response, SEEN_BLOCKS):
+        # If clause runs if current block has been already processed, in which
+        # case Wait longer for a new block to added to the blockchain.
+        if current_page(response) == 1 and has_block_been_seen(response, seen_blocks):
             time.sleep(WAIT_FOR_NEW_BLOCK)
-            log.info(f'Seen blocks: {SEEN_BLOCKS}')
+            log.info(f'Seen blocks: {seen_blocks}')
             continue
 
-        log.info(f'Seen blocks so far: {SEEN_BLOCKS}')
+        log.info(f'Blocks seen so far: {seen_blocks}')
         txs = extract_txs(response)
-        # As far as I can tell, the API provides paginated data about the
-        # latest block
+        # Assumption: transaction in a response must belong to same block.
         assert txs_belong_to_same_block(txs)
-        SEEN_BLOCKS.add(txs[0]['block_height'])
-        send(txs)
-        # If processing last page, reset page counter. Otherwise, go to next
+        add_block_to_seen(txs, seen_blocks)
+        server_resp = send(txs)
+        assert server_resp['total_processed'] == len(txs)
+
+        # If last page, reset page counter. Otherwise, go to next
         # page.
         if current_page(response) == total:
             page = 1
