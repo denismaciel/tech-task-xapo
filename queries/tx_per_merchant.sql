@@ -9,16 +9,15 @@ remove_duplicate_txs AS (
 ),
 
 count_txs AS (
-    SELECT 
+    SELECT
         merchant_name,
         status,
         COUNT(*) AS n
     FROM remove_duplicate_txs
-    GROUP BY 
+    GROUP BY
         merchant_name,
         status
 )
 
 SELECT *
 FROM count_txs
-

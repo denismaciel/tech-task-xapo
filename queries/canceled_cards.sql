@@ -22,7 +22,7 @@ latest_card_instances AS (
 ),
 
 deactivated_cards AS (
-    SELECT 
+    SELECT
         card_id,
         deactivation_date,
         creation_date,

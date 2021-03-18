@@ -9,10 +9,10 @@ activation date, first used date.
     * first used date: date of first transatcion in transactions
 */
 
-WITH 
+WITH
 
 ordered_date AS (
-    SELECT 
+    SELECT
         id AS card_id,
         creation_date AS ordered_date
     FROM card
@@ -58,7 +58,7 @@ first_used_date AS (
 ),
 
 joined AS (
-    SELECT 
+    SELECT
         ordered_date.card_id,
         ordered_date.ordered_date,
         issued_date.issued_date,

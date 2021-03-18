@@ -16,40 +16,43 @@ had.
 
 6. Provide the list of top 10 highest spending cards.
 """
-
 # card
-['id',
- 'current_instance_id',
- 'creation_date',
- 'last_update',
- 'provider_card_id',
- 'provider_id',
- 'user_id',
- 'status',
- 'paused',
- 'type',
- 'subtype',
- 'currency',
- 'name',
- 'brand',
- 'program',
- 'provider_version',
- 'multicurrency']
+[
+    'id',
+    'current_instance_id',
+    'creation_date',
+    'last_update',
+    'provider_card_id',
+    'provider_id',
+    'user_id',
+    'status',
+    'paused',
+    'type',
+    'subtype',
+    'currency',
+    'name',
+    'brand',
+    'program',
+    'provider_version',
+    'multicurrency',
+]
 
 # card instance
-['id',
- 'card_id',
- 'creation_date',
- 'last_update',
- 'provider_card_id',
- 'design',
- 'activation_date',
- 'deactivation_date',
- 'deactivation_reason',
- 'shipping_address_id',
- 'pin_set_date',
- 'pin_id',
- 'last_pan_digits']
+[
+    'id',
+    'card_id',
+    'creation_date',
+    'last_update',
+    'provider_card_id',
+    'design',
+    'activation_date',
+    'deactivation_date',
+    'deactivation_reason',
+    'shipping_address_id',
+    'pin_set_date',
+    'pin_id',
+    'last_pan_digits',
+]
 
 # card_instance_shipping
 # In [115]: card_instance_shipping
@@ -57,7 +60,7 @@ had.
 #            id card_instance_id       creation_date              status  delivery_estimate_days
 # 0     477,058          198,959 2020-01-02 13:52:24  delivery_confirmed                      14
 # 1     477,062          199,201 2020-01-02 19:48:12  delivery_confirmed                      14
-# 2     477,066          199,231 2020-01-03 15:32:21             shipped    
+# 2     477,066          199,231 2020-01-03 15:32:21             shipped
 
 # In [112]: card_instance[card_instance['card_id'] == '110,693' ]
 # Out[112]:
@@ -84,28 +87,26 @@ RAW_DATA_DIR = Path('./code/data')
 
 
 spark = (
-    pyspark
-    .sql
-    .SparkSession
-    .builder
-    .enableHiveSupport()
-    .config("spark.sql.warehouse.dir", '/home/jovyan/spark-warehouse2')
+    pyspark.sql.SparkSession.builder.enableHiveSupport()
+    .config('spark.sql.warehouse.dir', '/home/jovyan/spark-warehouse2')
     .appName('Xapo')
     .getOrCreate()
 )
 
 
-def load_csv(csv: os.PathLike):
+def load_csv(csv: os.PathLike) -> pyspark.sql.DataFrame:
     """
     Load a CSV file as DataFrame
     """
     return spark.read.csv(
         str(csv),
-        header=True, 
-        sep=',', 
+        header=True,
+        sep=',',
         inferSchema=True,
         timestampFormat='yyyy-MM-dd HH:mm:ss',
-        mode='FAILFAST')
+        mode='FAILFAST',
+    )
+
 
 def create_view(df: pyspark.sql.DataFrame, table_name) -> None:
     df.createOrReplaceTempView(table_name)
@@ -113,6 +114,7 @@ def create_view(df: pyspark.sql.DataFrame, table_name) -> None:
 
 def str_to_int(df: pyspark.sql.DataFrame, columns: List[str]) -> pyspark.sql.DataFrame:
     ...
+
 
 def load_query(path: os.PathLike) -> str:
     with open(path, 'r') as f:
@@ -128,22 +130,39 @@ def usd_rates():
 
     def build_url(base: str, symbols: List[str]) -> str:
         symbols = ','.join(symbols)
-        return f"{ENDPOINT}?base={base}&{symbols}"
+        return f'{ENDPOINT}?base={base}&{symbols}'
 
-    symbols = ['GBP', 'EUR', 'BRL', 'RON', 'CHF', 'COP', 'USD', 'PLN', 'ARS',
-           'CZK', 'UYU', 'BGN', 'HUF', 'NOK', 'HRK', 'AED', 'SEK', 'DOP',
-           'SGD', 'INR']
+    symbols = [
+        'GBP',
+        'EUR',
+        'BRL',
+        'RON',
+        'CHF',
+        'COP',
+        'USD',
+        'PLN',
+        'ARS',
+        'CZK',
+        'UYU',
+        'BGN',
+        'HUF',
+        'NOK',
+        'HRK',
+        'AED',
+        'SEK',
+        'DOP',
+        'SGD',
+        'INR',
+    ]
 
     url = build_url('USD', symbols)
 
     with urlopen(url) as response:
-        content = response.read().decode("utf-8")
+        content = response.read().decode('utf-8')
 
     usd_rates = json.loads(content)['rates']
-    return spark.createDataFrame(
-        usd_rates.items(),
-        ["symbol", "dollar"] 
-    )
+    return spark.createDataFrame(usd_rates.items(), ['symbol', 'dollar'])
+
 
 def main():
 
@@ -158,13 +177,14 @@ def main():
 
     # return spark.sql(load_query('code/queries/tx_per_merchant.sql'))
     # return spark.sql(load_query('code/queries/canceled_cards.sql'))
-    return spark.sql(load_query('code/queries/top10_cards.sql'))
+    # return spark.sql(load_query('code/queries/top10_cards.sql'))
+    return spark.sql(load_query('code/queries/card_usage.sql'))
 
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # card = load_csv(RAW_DATA_DIR / 'card.csv').toPandas()
     # card_instance = load_csv(RAW_DATA_DIR / 'card_instance.csv').toPandas()
     # card_instance_shipping = load_csv(RAW_DATA_DIR / 'card_instance_shipping.csv').toPandas()
     # transactions = load_csv(RAW_DATA_DIR / 'transactions.csv').toPandas()
     df = main().toPandas()
+    print(df)
