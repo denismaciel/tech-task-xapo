@@ -1,22 +1,22 @@
 """
 
 """
-import functools
 import itertools
 import json
 import logging
-import operator
 import time
 import urllib
+from typing import Any
 from typing import Dict
-from typing import List
 from urllib.request import urlopen
 
 import base58
 
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
+    level=logging.INFO,
+    format='%(asctime)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
 )
 log = logging.getLogger(__name__)
 
@@ -41,14 +41,6 @@ def query_api(page):
             raise e
 
 
-def _query_api(page):
-    with open('stream/tx.json') as f:
-        return json.load(f)
-
-
-query_api = _query_api
-
-
 def is_valid(address: str) -> bool:
     try:
         base58.b58decode_check(address)
@@ -62,7 +54,7 @@ assert is_valid('5282N4BYEwYh3j1dTgJu64Ey5qWn9Po9F') is False
 assert is_valid('not_a_Bitcoin_address') is False
 
 
-def extract_valid_addresses(tx) -> Dict[str, str]:
+def extract_valid_addresses(tx) -> Dict[str, Any]:
     inp_addresses = itertools.chain.from_iterable(
         inp['prev_addresses'] for inp in tx['inputs']
     )
@@ -144,7 +136,6 @@ def main():
         assert page == current_page(response)
 
         if current_page(response) == 1 and has_block_been_seen(response, SEEN_BLOCKS):
-            log.info(f'First page')
             time.sleep(WAIT_FOR_NEW_BLOCK)
             log.info(f'Seen blocks: {SEEN_BLOCKS}')
             continue
@@ -156,7 +147,8 @@ def main():
         assert txs_belong_to_same_block(txs)
         SEEN_BLOCKS.add(txs[0]['block_height'])
 
-        # If processing last page, reset page counter. Otherwise, go to next page.
+        # If processing last page, reset page counter. Otherwise, go to next
+        # page.
         if current_page(response) == total:
             page = 1
         else:
