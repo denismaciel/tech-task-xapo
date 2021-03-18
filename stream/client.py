@@ -9,6 +9,7 @@ PORT = 65432
 def encode_dictionary(d: Dict) -> bytes:
     return json.dumps(d).encode()
 
+
 def send(data: bytes) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
@@ -19,8 +20,10 @@ def send(data: bytes) -> None:
 
     print('Received', response)
 
+
 def main():
     ...
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     ...
