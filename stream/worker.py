@@ -4,6 +4,7 @@
 import itertools
 import json
 import logging
+import socket
 import time
 import urllib
 from typing import Any
@@ -120,6 +121,24 @@ assert (
 )
 
 
+def send(data: Dict) -> None:
+    HOST = '127.0.0.1'
+    PORT = 65432
+
+    def encode_data(d: Dict) -> bytes:
+        return json.dumps(d).encode()
+
+    encoded = encode_data(data)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(encoded)
+        s.send(b'_end')  # Signal to server that all data has been transferred
+        response = s.recv(1024)
+
+    print('Received', response)
+
+
 def main():
     """
     Contains the logic of the worker.
@@ -146,7 +165,7 @@ def main():
         # latest block
         assert txs_belong_to_same_block(txs)
         SEEN_BLOCKS.add(txs[0]['block_height'])
-
+        send(txs)
         # If processing last page, reset page counter. Otherwise, go to next
         # page.
         if current_page(response) == total:
