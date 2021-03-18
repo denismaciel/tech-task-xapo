@@ -1,0 +1,20 @@
+[flake8]
+ignore =
+    E501,
+    W293,
+    W291,
+    E712, # allow x == True because of DataFrames
+    E123, # closing bracket does not match indentation of opening bracket's line
+    E124, # closing bracket does not match visual indentation
+    E126, # continuation line over-indented for hanging indent
+    E127, # continuation line over-indented for visual indent
+    E203, # no whitespace before ':'
+    E231, # missing whitespace after ','
+    E261, # at least two spaces before inline comment
+    E266, # too many leading '#' for block comment
+    E271, # multiple spaces after keyword
+    E303, # too many blank lines
+    E741, # ambiguous variable name
+    W391, # blank line at end of file
+    W503, # line break before binary operator
+    W504, # line break after binary operator
