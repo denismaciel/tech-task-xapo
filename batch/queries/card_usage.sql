@@ -3,7 +3,9 @@
     and more than 10 days to be used for the first time. Include the
     corresponding dates.
 
-    TODO: clarify after activated how long did it take to be used
+    Assumption:
+        * I am using the issued_date as a reference date to compute both how
+        long it took for the card activation and for its first usage.
 */
 
 WITH

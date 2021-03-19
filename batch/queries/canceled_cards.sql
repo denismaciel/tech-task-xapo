@@ -1,13 +1,16 @@
 /*
+    3. Provide the list of canceled cards and how many days each of them was active.
 
-    What is to be considered a canceled card?
-        * A card with status = 'REQUEST_CANCELED'? No, because
-        those cards map to card_instance.status = 'program_terminated'. But
-        there are other reasons for a deactivated_card, namely 'reported_lost',
-        'support_terminated'.
-        * A card instance where deactivation_reason is not null
+    What's the definition of canceled card?
+        * Definition 1: A card with status = 'REQUEST_CANCELED'. I have reject
+        this definition, because those cards map to card_instance.status =
+        'program_terminated'. But there are other reasons for a
+        deactivated_card, namely 'reported_lost', 'support_terminated'.
+        * Definition 2: A card instance where deactivation_reason is not null.
 
-        Question: can a card be reactivated after an activation?
+    I have used Definition 2.
+
+    Question: can a card be reactivated after an activation?
 */
 
 WITH

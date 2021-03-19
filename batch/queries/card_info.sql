@@ -2,6 +2,12 @@
 
 1. Provide the following information for each card: order date, issue date,
 activation date, first used date.
+
+Card x Card Instances: It seems there is a 1-to-n relationship between `card`
+and `card_instances`, such that one card can potentially have multiple cards
+instances.
+
+Assumptions:
     * Ordered date: when the card was created => `card.creation_date`
     * Issue date: when the (first) card (instance) was shipped =>
       `card_instance_shipping.creation_date where status = 'shipped'`
@@ -19,8 +25,8 @@ ordered_date AS (
 ),
 
 /*
-    The issued_date of a card is considered to be the issued_date of its first
-    instance.
+    I have consiered the issued_date of a card to be the issued_date of its
+    first instance.
 */
 card_first_instance AS (
     SELECT DISTINCT

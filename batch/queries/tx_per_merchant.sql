@@ -1,4 +1,8 @@
 WITH
+/*
+    Task 4: Provide the list of merchants together with the number of transactions they had.
+    Task 5: Provide the transaction counts by status and by merchant.
+*/
 
 remove_duplicate_txs AS (
     SELECT DISTINCT
@@ -21,3 +25,4 @@ count_txs AS (
 
 SELECT *
 FROM count_txs
+ORDER BY n DESC
