@@ -29,17 +29,14 @@ def query_api(page):
         with urlopen(ENDPOINT) as response:
             return json.loads(response.read().decode('utf-8'))
     except urllib.error.HTTPError as e:
-        # In case of 429 (too many requests error), wait longer and call the
-        # function again.
-        if e.code == 429:
-            log.info(
-                'HTTP Error 429: too many requests.'
-                'Sleeping for 1 minute before restarting API calls.'
-            )
-            time.sleep(60)
-            return query_api(page)
-        else:
+        if e.code != 429:
             raise e
+        log.info(
+            'HTTP Error 429: too many requests.'
+            'Sleeping for 1 minute before restarting API calls.'
+        )
+        time.sleep(60)
+        return query_api(page)
 
 
 def is_valid(address: str) -> bool:
@@ -94,8 +91,7 @@ def extract_txs(response):
     Extract and format transactions from API response.
     """
     raw_txs = response['data']['list']
-    txs = [format_tx(tx) for tx in raw_txs]
-    return txs
+    return [format_tx(tx) for tx in raw_txs]
 
 
 def has_block_been_seen(response, seen):

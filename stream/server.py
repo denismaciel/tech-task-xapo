@@ -49,9 +49,7 @@ def process(txs):
     total_fees = sum(tx['fee'] for tx in txs)
 
     print(
-        'Received {} from block {}. Average fees were {}'.format(
-            n, block_height, round(total_fees / n)
-        )
+        f'Received {n} from block {block_height}. Average fees were {round(total_fees / n)}'
     )
 
 
